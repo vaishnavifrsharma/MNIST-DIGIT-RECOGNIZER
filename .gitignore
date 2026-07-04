@@ -1,0 +1,8 @@
+sample_data/
+.config/
+.ipynb_checkpoints/
+__pycache__/
+models/
+*.pkl
+*.joblib
+.DS_Store
