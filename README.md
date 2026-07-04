@@ -1,28 +1,92 @@
-# MNIST Digit Recognizer
+# MNIST KNN Digit Recognizer ✍️🔢
 
 ![Python](https://img.shields.io/badge/Python-3.x-blue)
-![Scikit Learn](https://img.shields.io/badge/Scikit--Learn-ML-orange)
+![Scikit--Learn](https://img.shields.io/badge/Scikit--Learn-KNN-orange)
+![Gradio](https://img.shields.io/badge/Gradio-Web%20App-ff7c00)
 ![Dataset](https://img.shields.io/badge/Dataset-MNIST-purple)
-![Status](https://img.shields.io/badge/Status-In%20Progress-brightgreen)
+![Status](https://img.shields.io/badge/Status-Interactive%20Demo-brightgreen)
 
-A machine learning project that compares classical ML models for handwritten digit recognition using the MNIST dataset.
+A handwritten digit recognizer built with **classical machine learning** and wrapped inside a clean, interactive **draw-on-web app**.
 
-The goal is to build the project from scratch, understand preprocessing, train multiple models, evaluate them, and compare their performance.
+Instead of uploading an image, you draw a digit directly on the canvas. The app cleans the drawing, converts it into a proper **28 × 28 MNIST-style input**, and predicts the digit using a **K-Nearest Neighbors classifier**.
+
+It is tiny, visual, explainable, and mildly obsessed with handwritten numbers.
 
 ---
 
-## Project Pipeline
+## Demo Preview
 
-| Step | Description |
+> Add your final app screenshot here after deployment.
+
+```md
+![App Screenshot](assets/app_screenshot.png)
+```
+
+---
+
+## What This Project Does
+
+- Lets users draw a digit from **0 to 9** on a web canvas
+- Converts the drawing into MNIST format using image preprocessing
+- Predicts the digit using a trained **KNN model**
+- Shows a large predicted digit for quick feedback
+- Displays a detailed confidence summary for all digit classes
+- Keeps the UI editable through a single CSS block inside `app.py`
+
+---
+
+## Why This Project Is Interesting
+
+MNIST is often used as a beginner machine learning dataset, but this project takes it one step further.
+
+Instead of stopping at notebook accuracy, it turns the model into something interactive:
+
+```text
+hand-drawn digit → preprocessing pipeline → KNN prediction → confidence explanation
+```
+
+The important learning is not just “train a model.”  
+The real challenge is making a model trained on neat MNIST images understand messy human drawings from a web canvas.
+
+That means handling:
+
+- off-center drawings
+- thick and thin strokes
+- extra whitespace
+- inverted colors
+- noisy mouse strokes
+- shape distortion during resizing
+
+This is where the project becomes more than a dataset exercise. It becomes a tiny end-to-end ML product.
+
+---
+
+## Tech Stack
+
+| Area | Tools Used |
 |---|---|
-| 1 | Load MNIST dataset |
-| 2 | Visualize sample handwritten digits |
-| 3 | Normalize pixel values |
-| 4 | Split data into train and test sets |
-| 5 | Train Logistic Regression |
-| 6 | Train K-Nearest Neighbors |
-| 7 | Train Decision Tree |
-| 8 | Compare models using accuracy, classification reports, confusion matrices, and wrong predictions |
+| Language | Python |
+| Machine Learning | Scikit-learn |
+| Model | K-Nearest Neighbors |
+| Dataset | MNIST from OpenML |
+| Image Processing | OpenCV, NumPy, Pillow |
+| Web App | Gradio |
+| Model Saving | Joblib |
+
+---
+
+## Project Structure
+
+```text
+MNIST-DIGIT-RECOGNIZER/
+│
+├── main.py              # trains and saves the KNN model
+├── app.py               # Gradio drawing app
+├── requirements.txt     # project dependencies
+├── knn_mnist.joblib     # saved model generated after training
+├── README.md            # project documentation
+└── assets/              # screenshots and charts
+```
 
 ---
 
@@ -30,142 +94,221 @@ The goal is to build the project from scratch, understand preprocessing, train m
 
 | Property | Value |
 |---|---|
-| Source | `sklearn.datasets.fetch_openml('mnist_784', version=1, as_frame=True)` |
-| Total Samples | 70,000 |
+| Dataset | MNIST |
+| Source | `fetch_openml("mnist_784", version=1)` |
+| Samples | 70,000 |
+| Image Size | 28 × 28 |
 | Features | 784 pixel values |
-| Image Size | 28 x 28 |
 | Classes | Digits 0 to 9 |
 
----
-
-## Preprocessing
-
-The following preprocessing steps were applied:
-
-- Loaded the MNIST dataset using `fetch_openml`
-- Visualized sample handwritten digits
-- Normalized pixel values using `X = X / 255.0`
-- Converted labels to integer format
-- Used stratified train-test split to preserve class distribution
+Each image is flattened into a 784-dimensional vector, where each value represents one pixel.
 
 ---
 
-## Train-Test Split
+## Model Used in the Web App
 
-| Dataset | Shape |
+The deployed app uses **K-Nearest Neighbors**.
+
+Current training setup in `main.py`:
+
+| Parameter | Value |
 |---|---|
-| X_train | 56,000 x 784 |
-| X_test | 14,000 x 784 |
-| y_train | 56,000 |
-| y_test | 14,000 |
+| Model | `KNeighborsClassifier` |
+| Neighbors | `k = 3` |
+| Weighting | Distance-weighted voting |
+| Distance Metric | Euclidean distance |
+| Training Samples | 30,000 |
+| Test Samples | 8,000 |
+| Saved Model | `knn_mnist.joblib` |
+
+KNN does not learn weights like a neural network. It stores training examples and predicts by checking which stored digits are closest to the new drawing.
+
+A simple way to think about it:
+
+```text
+“This drawing looks closest to these 3 saved digits. Most of them are 7, so I predict 7.”
+```
 
 ---
 
-## Models Implemented
+## Preprocessing Pipeline
 
-| Model | Type | Purpose |
-|---|---|---|
-| Logistic Regression | Linear Model | Strong baseline classifier |
-| K-Nearest Neighbors | Distance-Based Model | Compares images based on similarity |
-| Decision Tree Classifier | Tree-Based Model | Learns non-linear decision rules |
+The web canvas drawing is not naturally in MNIST format, so the app cleans it before prediction.
+
+```text
+User drawing
+   ↓
+Convert to grayscale
+   ↓
+Invert colors
+   ↓
+Detect ink pixels
+   ↓
+Crop around the digit
+   ↓
+Make the crop square-safe
+   ↓
+Resize to fit MNIST scale
+   ↓
+Center using image moments
+   ↓
+Flatten into 784 features
+   ↓
+Predict with KNN
+```
+
+Why this matters: KNN is distance-based, so even a shifted or stretched digit can confuse it. A clean centered input gives the model a much better chance of making the correct prediction.
 
 ---
 
-## Model Results
+## Model Comparison From Notebook Experiments
 
 | Rank | Model | Test Setup | Accuracy |
-|---|---|---|---|
+|---|---|---|---:|
 | 1 | KNN, k=3 | 10,000 train samples, 2,000 test samples | 94.90% |
 | 2 | Logistic Regression | Full test set of 14,000 images | 92.15% |
 | 3 | Decision Tree | Full test set of 14,000 images | 87.69% |
 
----
-
-## Accuracy Leaderboard
-
-| Model | Accuracy | Visual |
-|---|---:|---|
-| KNN | 94.90% | ████████████████████ |
-| Logistic Regression | 92.15% | ███████████████████ |
-| Decision Tree | 87.69% | ██████████████████ |
+KNN performed best in the comparison, which is why it was selected for the interactive drawing app.
 
 ---
 
-## Accuracy Comparison Chart
-
-![Model Accuracy Comparison](assets/model_accuracy_comparison.png)
-
----
-
-## KNN Hyperparameter Results
+## KNN Hyperparameter Experiment
 
 | K Value | Accuracy |
-|---|---|
+|---|---:|
 | 1 | 95.60% |
 | 3 | 94.90% |
 | 5 | 94.80% |
 | 7 | 94.05% |
 
-The KNN model performed best when `k = 1`, but `k = 3` was used as the main KNN model because it gives strong performance while reducing sensitivity to individual noisy samples.
+Although `k = 1` gave the highest experimental score, `k = 3` was chosen for the app because it is less sensitive to one noisy nearest neighbor.
 
 ---
 
-## Decision Tree Results
+## How to Run Locally
 
-The Decision Tree Classifier achieved an accuracy of **87.69%** on the full test set of 14,000 images.
+### 1. Clone the repository
 
-### Classification Report Summary
+```bash
+git clone https://github.com/your-username/MNIST-DIGIT-RECOGNIZER.git
+cd MNIST-DIGIT-RECOGNIZER
+```
 
-| Digit Group | Digits |
-|---|---|
-| Stronger Digits | 0, 1, 6, 7 |
-| Weaker Digits | 5, 8, 9, 3 |
+### 2. Install dependencies
 
-The model performed better on digits with clearer structures, such as **0** and **1**.  
-It struggled more with visually similar digits such as **5**, **8**, **9**, and **3**.
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Train the model
+
+```bash
+python main.py
+```
+
+This creates:
+
+```text
+knn_mnist.joblib
+```
+
+### 4. Start the web app
+
+```bash
+python app.py
+```
+
+Open the local Gradio link, draw a digit, and press **Predict Digit**.
 
 ---
 
-## Error Analysis
+## How the App Should Be Used
 
-The notebook includes:
+For best predictions:
 
-- Classification reports
-- Confusion matrices
-- Wrong prediction visualizations
-- Model comparison table
-- Accuracy bar chart
+- Draw one digit only
+- Draw large
+- Keep the digit centered
+- Avoid fancy handwriting
+- Use clear strokes
 
-These help identify which digits are commonly confused and where each model makes mistakes.
+The app works best when the drawing looks reasonably similar to MNIST-style handwritten digits.
+
+---
+
+## Confidence Summary
+
+The app does not only show the predicted digit. It also shows a confidence breakdown.
+
+Example:
+
+```text
+Predicted digit: 8
+Top confidence: 86.4%
+Second guess: 3
+Confidence gap: 31.2%
+```
+
+This helps show when the model is certain and when it is confused between visually similar digits.
 
 ---
 
 ## Key Learnings
 
-- MNIST images can be represented as 784-dimensional feature vectors.
-- Normalization improves training and distance-based comparison.
-- Logistic Regression is a strong and efficient baseline for multiclass classification.
-- KNN performs very well on MNIST but becomes slower as dataset size increases.
-- Decision Trees can capture non-linear rules but may overfit on image data.
-- Confusion matrices and wrong prediction plots are useful for model interpretation.
+- MNIST images are represented as 784-dimensional vectors
+- Normalization improves model behavior
+- KNN is simple but powerful for image similarity tasks
+- KNN becomes slower as training data increases
+- Web drawings need careful preprocessing before prediction
+- Centering, cropping, and resizing matter a lot for distance-based models
+- Confidence scores make predictions easier to interpret
+- Turning a notebook model into a web app teaches real ML deployment workflow
 
 ---
 
-## Final Conclusion
+## Limitations
 
-In this project, three classical machine learning models were trained and compared on the MNIST handwritten digit recognition task.
+This project intentionally uses classical ML, so it has some limits:
 
-KNN achieved the highest accuracy of **94.90%**, but it was evaluated on a smaller test subset because prediction is computationally slower. Logistic Regression achieved **92.15%** accuracy on the full test set, making it the strongest full-dataset baseline. Decision Tree achieved **87.69%** accuracy and helped demonstrate how a non-linear tree-based model performs on image classification.
+- KNN prediction slows down with larger training sets
+- Unusual handwriting can confuse the model
+- Very tiny or off-center drawings may reduce accuracy
+- The model compares raw pixel distances, not high-level digit features
+- It is less robust than a CNN for real-world handwriting variation
 
-Overall, this project shows that classical machine learning models can perform well on handwritten digit recognition while also highlighting trade-offs between accuracy, speed, and model complexity.
+These limitations are not failures. They are part of the learning story.
 
 ---
 
-## Next Steps
+## Future Improvements
 
-- Test custom handwritten digit images
-- Try Random Forest Classifier
-- Try Support Vector Machine
-- Try PCA for dimensionality reduction
-- Build a simple web interface for digit prediction
-- Save trained models for reuse
+- Deploy the app on Hugging Face Spaces
+- Add example screenshots to the README
+- Add a small gallery of correct and wrong predictions
+- Add a toggle to show/hide the 28 × 28 processed input
+- Improve preprocessing for thin strokes and unusual handwriting
+- Add a short model explanation section inside the app
+- Compare app predictions with notebook test-set results
+
+---
+
+## Final Takeaway
+
+This project starts with a classic dataset, but turns it into a hands-on ML demo.
+
+It shows the full path from:
+
+```text
+raw pixels → model training → saved model → web interface → live prediction
+```
+
+The result is a compact, explainable digit recognizer that makes machine learning feel less like a black box and more like a tiny number detective with a magnifying glass.
+
+---
+
+## Author
+
+**Vaishnavi Sharma**
+
+Built as part of a hands-on machine learning learning path using MNIST, classical ML models, and interactive web deployment.
