@@ -1,3 +1,13 @@
+---
+title: MNIST KNN Digit Recognizer
+emoji: ✍️
+colorFrom: pink
+colorTo: yellow
+sdk: gradio
+app_file: app.py
+pinned: false
+---
+
 # MNIST KNN Digit Recognizer ✍️🔢
 
 ![Python](https://img.shields.io/badge/Python-3.x-blue)
