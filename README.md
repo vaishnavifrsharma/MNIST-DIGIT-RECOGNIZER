@@ -14,138 +14,99 @@ pinned: false
 ![Scikit--Learn](https://img.shields.io/badge/Scikit--Learn-KNN-orange)
 ![Gradio](https://img.shields.io/badge/Gradio-Web%20App-ff7c00)
 ![Dataset](https://img.shields.io/badge/Dataset-MNIST-purple)
-![Status](https://img.shields.io/badge/Status-Interactive%20Demo-brightgreen)
+![Status](https://img.shields.io/badge/Status-Deployed-brightgreen)
 
-A handwritten digit recognizer built with **classical machine learning** and wrapped inside a clean, interactive **draw-on-web app**.
+An interactive handwritten digit recognizer built with **K-Nearest Neighbors**, **Scikit-learn**, **OpenCV**, and **Gradio**.
 
-Instead of uploading an image, you draw a digit directly on the canvas. The app cleans the drawing, converts it into a proper **28 × 28 MNIST-style input**, and predicts the digit using a **K-Nearest Neighbors classifier**.
-
-It is tiny, visual, explainable, and mildly obsessed with handwritten numbers.
+Draw a digit directly on the web canvas, and the app converts your drawing into a clean **28 × 28 MNIST-style image** before predicting the digit using a trained KNN classifier.
 
 ---
 
-## Demo Preview
+## Live Demo
 
-> Add your final app screenshot here after deployment.
+Try the deployed app here:
 
-```md
-![App Screenshot](assets/app_screenshot.png)
-```
+[MNIST KNN Digit Recognizer on Hugging Face Spaces](https://huggingface.co/spaces/vaishnavifr/mnist-knn-digit-recognizer)
 
 ---
 
-## What This Project Does
+## Project Overview
 
-- Lets users draw a digit from **0 to 9** on a web canvas
-- Converts the drawing into MNIST format using image preprocessing
-- Predicts the digit using a trained **KNN model**
-- Shows a large predicted digit for quick feedback
-- Displays a detailed confidence summary for all digit classes
-- Keeps the UI editable through a single CSS block inside `app.py`
+This project takes the classic MNIST digit recognition task beyond a notebook and turns it into a working web app.
 
----
-
-## Why This Project Is Interesting
-
-MNIST is often used as a beginner machine learning dataset, but this project takes it one step further.
-
-Instead of stopping at notebook accuracy, it turns the model into something interactive:
+The app follows this pipeline:
 
 ```text
-hand-drawn digit → preprocessing pipeline → KNN prediction → confidence explanation
-```
+Draw digit → preprocess image → convert to 28 × 28 MNIST format → predict with KNN → show confidence summary
 
-The important learning is not just “train a model.”  
-The real challenge is making a model trained on neat MNIST images understand messy human drawings from a web canvas.
+The main learning goal was not only to train a model, but to understand how a machine learning model can be saved, loaded, deployed, and used through an interactive interface.
 
-That means handling:
-
-- off-center drawings
-- thick and thin strokes
-- extra whitespace
-- inverted colors
-- noisy mouse strokes
-- shape distortion during resizing
-
-This is where the project becomes more than a dataset exercise. It becomes a tiny end-to-end ML product.
-
----
-
-## Tech Stack
-
-| Area | Tools Used |
-|---|---|
-| Language | Python |
-| Machine Learning | Scikit-learn |
-| Model | K-Nearest Neighbors |
-| Dataset | MNIST from OpenML |
-| Image Processing | OpenCV, NumPy, Pillow |
-| Web App | Gradio |
-| Model Saving | Joblib |
-
----
-
-## Project Structure
-
-```text
+Features
+Draw digits directly on a web canvas
+Predict handwritten digits from 0 to 9
+Uses a trained KNN model
+Converts drawings into MNIST-style 28 × 28 inputs
+Shows the processed image that the model actually sees
+Displays confidence scores for all digit classes
+Clean custom Gradio interface
+Deployed on Hugging Face Spaces
+Tech Stack
+Area	Tools
+Language	Python
+Machine Learning	Scikit-learn
+Model	K-Nearest Neighbors
+Dataset	MNIST via OpenML
+Image Processing	OpenCV, NumPy, Pillow
+Web App	Gradio
+Model Saving	Joblib
+Deployment	Hugging Face Spaces
+Project Structure
 MNIST-DIGIT-RECOGNIZER/
 │
+├── app.py               # Gradio web app
 ├── main.py              # trains and saves the KNN model
-├── app.py               # Gradio drawing app
+├── knn_mnist.joblib     # saved trained KNN model
 ├── requirements.txt     # project dependencies
-├── knn_mnist.joblib     # saved model generated after training
+├── MNIST_pynb.ipynb     # notebook experiments
 ├── README.md            # project documentation
-└── assets/              # screenshots and charts
-```
+├── assets/              # screenshots/charts
+└── LICENSE
+Dataset
 
----
+The project uses the MNIST dataset from OpenML.
 
-## Dataset
+Property	Value
+Dataset	MNIST
+Source	fetch_openml("mnist_784", version=1)
+Total Samples	70,000
+Image Size	28 × 28
+Features	784 pixel values
+Classes	Digits 0 to 9
 
-| Property | Value |
-|---|---|
-| Dataset | MNIST |
-| Source | `fetch_openml("mnist_784", version=1)` |
-| Samples | 70,000 |
-| Image Size | 28 × 28 |
-| Features | 784 pixel values |
-| Classes | Digits 0 to 9 |
+Each image is flattened into a 784-dimensional vector, where each value represents one grayscale pixel.
 
-Each image is flattened into a 784-dimensional vector, where each value represents one pixel.
+Model Used
 
----
+The deployed app uses a K-Nearest Neighbors classifier.
 
-## Model Used in the Web App
+Parameter	Value
+Model	KNeighborsClassifier
+Neighbors	k = 3
+Weighting	Distance-weighted voting
+Distance Metric	Euclidean distance
+Training Samples	30,000
+Test Samples	8,000
+Saved File	knn_mnist.joblib
 
-The deployed app uses **K-Nearest Neighbors**.
+KNN predicts a digit by comparing the user drawing with stored MNIST examples and choosing the class of the nearest examples.
 
-Current training setup in `main.py`:
+In simple terms:
 
-| Parameter | Value |
-|---|---|
-| Model | `KNeighborsClassifier` |
-| Neighbors | `k = 3` |
-| Weighting | Distance-weighted voting |
-| Distance Metric | Euclidean distance |
-| Training Samples | 30,000 |
-| Test Samples | 8,000 |
-| Saved Model | `knn_mnist.joblib` |
+“This drawing looks closest to these saved digits, so I will predict the most similar class.”
+Preprocessing Pipeline
 
-KNN does not learn weights like a neural network. It stores training examples and predicts by checking which stored digits are closest to the new drawing.
+The web drawing is not automatically in MNIST format, so it must be cleaned before prediction.
 
-A simple way to think about it:
-
-```text
-“This drawing looks closest to these 3 saved digits. Most of them are 7, so I predict 7.”
-```
-
----
-
-## Preprocessing Pipeline
-
-The web canvas drawing is not naturally in MNIST format, so the app cleans it before prediction.
-
-```text
 User drawing
    ↓
 Convert to grayscale
@@ -156,226 +117,104 @@ Detect ink pixels
    ↓
 Crop around the digit
    ↓
-Make the crop square-safe
-   ↓
-Resize to fit MNIST scale
+Resize while preserving shape
    ↓
 Center using image moments
+   ↓
+Convert to 28 × 28 image
    ↓
 Flatten into 784 features
    ↓
 Predict with KNN
-```
 
-Why this matters: KNN is distance-based, so even a shifted or stretched digit can confuse it. A clean centered input gives the model a much better chance of making the correct prediction.
+This step is important because KNN is distance-based. If the drawing is too small, off-center, or poorly cropped, the distance comparison becomes less reliable.
 
----
+Notebook Model Comparison
 
-## Model Comparison From Notebook Experiments
+The notebook compares multiple classical ML models on MNIST.
 
-| Rank | Model | Test Setup | Accuracy |
-|---|---|---|---:|
-| 1 | KNN, k=3 | 10,000 train samples, 2,000 test samples | 94.90% |
-| 2 | Logistic Regression | Full test set of 14,000 images | 92.15% |
-| 3 | Decision Tree | Full test set of 14,000 images | 87.69% |
+Rank	Model	Test Setup	Accuracy
+1	KNN, k=3	10,000 train samples, 2,000 test samples	94.90%
+2	Logistic Regression	Full test set of 14,000 images	92.15%
+3	Decision Tree	Full test set of 14,000 images	87.69%
 
-KNN performed best in the comparison, which is why it was selected for the interactive drawing app.
+KNN performed best in the comparison, so it was selected for the deployed interactive app.
 
----
+KNN Hyperparameter Experiment
+K Value	Accuracy
+1	95.60%
+3	94.90%
+5	94.80%
+7	94.05%
 
-## KNN Hyperparameter Experiment
+Although k = 1 gave the highest score in one experiment, k = 3 was chosen because it is less sensitive to one noisy nearest neighbor.
 
-| K Value | Accuracy |
-|---|---:|
-| 1 | 95.60% |
-| 3 | 94.90% |
-| 5 | 94.80% |
-| 7 | 94.05% |
-
-Although `k = 1` gave the highest experimental score, `k = 3` was chosen for the app because it is less sensitive to one noisy nearest neighbor.
-
----
-
-## How to Run Locally
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/your-username/MNIST-DIGIT-RECOGNIZER.git
+How to Run Locally
+1. Clone the repository
+git clone https://github.com/vaishnavifrsharma/MNIST-DIGIT-RECOGNIZER.git
 cd MNIST-DIGIT-RECOGNIZER
-```
-
-### 2. Install dependencies
-
-```bash
+2. Install dependencies
 pip install -r requirements.txt
-```
-
-### 3. Train the model
-
-```bash
+3. Train the model
 python main.py
-```
 
-This creates:
+This creates the saved model file:
 
-```text
 knn_mnist.joblib
-```
-
-### 4. Start the web app
-
-```bash
+4. Start the app
 python app.py
-```
 
-Open the local Gradio link, draw a digit, and press **Predict Digit**.
+Then open the Gradio link, draw a digit, and press Predict Digit.
 
----
+How to Use the App
 
-## How the App Should Be Used
+For better predictions:
 
-For best predictions:
+Draw one digit only
+Draw large and centered
+Use clear strokes
+Avoid very tiny digits
+Keep the digit similar to MNIST-style handwriting
 
-- Draw one digit only
-- Draw large
-- Keep the digit centered
-- Avoid fancy handwriting
-- Use clear strokes
+The app shows a processed 28 × 28 preview. If that preview looks clean, the prediction is more likely to be correct.
 
-The app works best when the drawing looks reasonably similar to MNIST-style handwritten digits.
+Limitations
 
----
+This project intentionally uses classical machine learning, so it has some limitations:
 
-## Confidence Summary
+KNN can become slow with larger training sets
+Unusual handwriting may confuse the model
+Very small or off-center drawings reduce prediction quality
+Raw pixel distance is less robust than CNN-based feature learning
+The saved KNN model is relatively large because KNN stores training examples
 
-The app does not only show the predicted digit. It also shows a confidence breakdown.
+These limitations are part of the learning story and show the trade-offs between simplicity, interpretability, speed, and accuracy.
 
-Example:
+Future Improvements
+Add example screenshots to the README
+Add a gallery of correct and wrong predictions
+Improve preprocessing for thin or unusual strokes
+Add a toggle to hide/show the processed 28 × 28 image
+Compare KNN with a CNN-based web model
+Add more explanation inside the app for beginner users
+Key Learnings
+MNIST images can be represented as 784-dimensional vectors
+Normalization improves model behavior
+KNN is simple, explainable, and effective for MNIST
+Image preprocessing is essential when using user-drawn inputs
+Model deployment requires more than notebook accuracy
+A saved ML model can be turned into an interactive web app using Gradio
+Hugging Face Spaces can host small ML demos cleanly
+Final Takeaway
 
-```text
-Predicted digit: 8
-Top confidence: 86.4%
-Second guess: 3
-Confidence gap: 31.2%
-```
+This project starts with a classic dataset and turns it into a complete mini ML product.
 
-This helps show when the model is certain and when it is confused between visually similar digits.
+raw pixels → model training → saved model → web app → live prediction
 
----
+It demonstrates the full workflow from experimentation to deployment, while keeping the model understandable and interactive.
 
-## Key Learnings
+Author
 
-- MNIST images are represented as 784-dimensional vectors
-- Normalization improves model behavior
-- KNN is simple but powerful for image similarity tasks
-- KNN becomes slower as training data increases
-- Web drawings need careful preprocessing before prediction
-- Centering, cropping, and resizing matter a lot for distance-based models
-- Confidence scores make predictions easier to interpret
-- Turning a notebook model into a web app teaches real ML deployment workflow
+Vaishnavi Sharma
 
----
-
-## Limitations
-
-This project intentionally uses classical ML, so it has some limits:
-
-- KNN prediction slows down with larger training sets
-- Unusual handwriting can confuse the model
-- Very tiny or off-center drawings may reduce accuracy
-- The model compares raw pixel distances, not high-level digit features
-- It is less robust than a CNN for real-world handwriting variation
-
-These limitations are not failures. They are part of the learning story.
-
----
-
-## Future Improvements
-
-- Deploy the app on Hugging Face Spaces
-- Add example screenshots to the README
-- Add a small gallery of correct and wrong predictions
-- Add a toggle to show/hide the 28 × 28 processed input
-- Improve preprocessing for thin strokes and unusual handwriting
-- Add a short model explanation section inside the app
-- Compare app predictions with notebook test-set results
-
----
-
-## Final Takeaway
-
-This project starts with a classic dataset, but turns it into a hands-on ML demo.
-
-It shows the full path from:
-
-```text
-raw pixels → model training → saved model → web interface → live prediction
-```
-
-The result is a compact, explainable digit recognizer that makes machine learning feel less like a black box and more like a tiny number detective with a magnifying glass.
-
----
-
-## Author
-
-**Vaishnavi Sharma**
-
-Built as part of a hands-on machine learning learning path using MNIST, classical ML models, and interactive web deployment.
-
----
-
-## Live Demo
-
-Try the deployed web app here:
-
-[MNIST KNN Digit Recognizer on Hugging Face Spaces](https://huggingface.co/spaces/vaishnavifr/mnist-knn-digit-recognizer)
-
-The app lets users draw a digit on a scratchpad, preprocesses it into MNIST-style 28 x 28 format, and predicts the digit using a trained K-Nearest Neighbors model.
-
----
-
-## Web App Features
-
-- Interactive drawing canvas for handwritten digits
-- KNN-based digit prediction
-- Centered 28 x 28 MNIST-style preview
-- Confidence/probability breakdown for digit classes
-- Custom Gradio UI deployed on Hugging Face Spaces
-
----
-
-## Run Locally
-
-```bash
-pip install -r requirements.txt
-python app.py
-eof
-
----
-
-## Live Demo
-
-Try the deployed web app here:
-
-[MNIST KNN Digit Recognizer on Hugging Face Spaces](https://huggingface.co/spaces/vaishnavifr/mnist-knn-digit-recognizer)
-
-The app lets users draw a digit on a scratchpad, preprocesses it into MNIST-style 28 x 28 format, and predicts the digit using a trained K-Nearest Neighbors model.
-
----
-
-## Web App Features
-
-- Interactive drawing canvas for handwritten digits
-- KNN-based digit prediction
-- Centered 28 x 28 MNIST-style preview
-- Confidence/probability breakdown for digit classes
-- Custom Gradio UI deployed on Hugging Face Spaces
-
----
-
-## Run Locally
-
-```bash
-pip install -r requirements.txt
-python app.py
+Built as part of a hands-on machine learning learning path using MNIST, classical ML models, Gradio, and Hugging Face Spaces.
