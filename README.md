@@ -322,3 +322,60 @@ The result is a compact, explainable digit recognizer that makes machine learnin
 **Vaishnavi Sharma**
 
 Built as part of a hands-on machine learning learning path using MNIST, classical ML models, and interactive web deployment.
+
+---
+
+## Live Demo
+
+Try the deployed web app here:
+
+[MNIST KNN Digit Recognizer on Hugging Face Spaces](https://huggingface.co/spaces/vaishnavifr/mnist-knn-digit-recognizer)
+
+The app lets users draw a digit on a scratchpad, preprocesses it into MNIST-style 28 x 28 format, and predicts the digit using a trained K-Nearest Neighbors model.
+
+---
+
+## Web App Features
+
+- Interactive drawing canvas for handwritten digits
+- KNN-based digit prediction
+- Centered 28 x 28 MNIST-style preview
+- Confidence/probability breakdown for digit classes
+- Custom Gradio UI deployed on Hugging Face Spaces
+
+---
+
+## Run Locally
+
+```bash
+pip install -r requirements.txt
+python app.py
+eof
+
+---
+
+## Live Demo
+
+Try the deployed web app here:
+
+[MNIST KNN Digit Recognizer on Hugging Face Spaces](https://huggingface.co/spaces/vaishnavifr/mnist-knn-digit-recognizer)
+
+The app lets users draw a digit on a scratchpad, preprocesses it into MNIST-style 28 x 28 format, and predicts the digit using a trained K-Nearest Neighbors model.
+
+---
+
+## Web App Features
+
+- Interactive drawing canvas for handwritten digits
+- KNN-based digit prediction
+- Centered 28 x 28 MNIST-style preview
+- Confidence/probability breakdown for digit classes
+- Custom Gradio UI deployed on Hugging Face Spaces
+
+---
+
+## Run Locally
+
+```bash
+pip install -r requirements.txt
+python app.py
