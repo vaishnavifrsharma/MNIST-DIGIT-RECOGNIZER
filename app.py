@@ -14,6 +14,8 @@ MODEL_PATH = "knn_mnist.joblib"
 # ----------------------------
 model_package = joblib.load(MODEL_PATH)
 knn = model_package["model"]
+MODEL_ACCURACY = model_package.get("accuracy", None)
+TRAIN_LIMIT = model_package.get("train_limit", "MNIST")
 
 
 # ----------------------------
@@ -22,77 +24,330 @@ knn = model_package["model"]
 # ----------------------------
 APP_CSS = """
 :root {
-    --bg-dark: #09090f;
-    --card: rgba(255, 255, 255, 0.08);
-    --card-border: rgba(255, 255, 255, 0.18);
-    --accent: #a78bfa;
-    --accent-2: #22d3ee;
-    --text-main: #f8fafc;
-    --text-soft: #cbd5e1;
+    --bg-almond: #EFE1D5;
+    --bg-almond-light: #F8F1EA;
+    --coffee: #2E0D14;
+    --coffee-2: #3A121A;
+    --coffee-3: #1C070C;
+    --rose-coffee: #4A202A;
+    --muted-coffee: #A58E80;
+    --cream: #EFE1D5;
+    --cream-2: #FFF8F1;
+    --ink: #2E0D14;
+    --shadow: rgba(46, 13, 20, 0.28);
 }
 
 .gradio-container {
     background:
-        radial-gradient(circle at top left, rgba(167, 139, 250, 0.22), transparent 32%),
-        radial-gradient(circle at bottom right, rgba(34, 211, 238, 0.18), transparent 30%),
-        var(--bg-dark) !important;
-    color: var(--text-main) !important;
-    font-family: Inter, system-ui, sans-serif !important;
+        radial-gradient(circle at top, rgba(255, 255, 255, 0.55), transparent 34%),
+        var(--bg-almond) !important;
+    color: var(--cream) !important;
+    font-family: Inter, ui-sans-serif, system-ui, sans-serif !important;
 }
 
 #hero {
     text-align: center;
-    padding: 24px 16px 10px 16px;
+    padding: 30px 16px 18px 16px;
+    color: var(--coffee) !important;
 }
 
 #hero h1 {
-    font-size: 48px;
-    font-weight: 900;
-    margin-bottom: 6px;
-    letter-spacing: -1px;
+    color: var(--coffee) !important;
+    font-family: Georgia, 'Times New Roman', serif !important;
+    font-size: 42px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
 }
 
 #hero p {
-    color: var(--text-soft);
-    font-size: 17px;
+    color: var(--rose-coffee) !important;
+    font-size: 15px;
+    letter-spacing: 0.3px;
+}
+
+#hero strong {
+    color: var(--coffee) !important;
+    font-weight: 800 !important;
 }
 
 #main-card {
-    background: var(--card);
-    border: 1px solid var(--card-border);
-    border-radius: 28px;
-    padding: 22px;
-    box-shadow: 0 20px 70px rgba(0, 0, 0, 0.35);
+    background: linear-gradient(180deg, var(--coffee-2), var(--coffee));
+    border: 2px solid var(--rose-coffee);
+    border-radius: 26px;
+    padding: 26px;
+    box-shadow: 0 28px 80px var(--shadow);
+    max-width: 1180px;
+    margin: 0 auto;
+}
+
+#tip-pill {
+    background: var(--coffee-3);
+    border: 1px solid rgba(239, 225, 213, 0.12);
+    color: var(--cream) !important;
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 18px;
+}
+
+.section-title h3 {
+    color: var(--cream) !important;
+    font-size: 13px !important;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
 }
 
 #draw-box {
-    border-radius: 24px;
+    background: var(--cream) !important;
+    border: 2px solid var(--rose-coffee);
+    border-radius: 18px;
     overflow: hidden;
 }
 
+#predict-panel {
+    min-height: 270px;
+}
+
+.prediction-card {
+    background: linear-gradient(180deg, #4A202A, #351019);
+    border: 1px solid rgba(239, 225, 213, 0.16);
+    border-radius: 20px;
+    min-height: 260px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.18);
+}
+
+.prediction-label {
+    color: var(--muted-coffee);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 12px;
+    margin-bottom: 8px;
+}
+
+.prediction-digit {
+    color: var(--cream-2);
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 154px;
+    line-height: 0.95;
+    font-weight: 700;
+    text-shadow: 0 12px 38px rgba(0, 0, 0, 0.34);
+}
+
+.prediction-confidence {
+    color: var(--cream);
+    font-size: 16px;
+    margin-top: 10px;
+}
+
+.prediction-subtext {
+    color: var(--muted-coffee);
+    font-size: 12px;
+    margin-top: 8px;
+}
+
 #predict-btn {
-    background: linear-gradient(135deg, var(--accent), var(--accent-2)) !important;
-    color: #050505 !important;
-    font-weight: 800 !important;
-    border-radius: 16px !important;
+    background: linear-gradient(90deg, var(--cream-2), var(--cream)) !important;
+    color: var(--coffee) !important;
+    font-weight: 900 !important;
+    letter-spacing: 1px;
+    border-radius: 12px !important;
     border: none !important;
+    min-height: 48px;
 }
 
 #clear-btn {
-    border-radius: 16px !important;
+    background: transparent !important;
+    color: var(--cream) !important;
+    border: 1px solid var(--cream) !important;
+    border-radius: 12px !important;
+    min-height: 48px;
 }
 
-#digit-output textarea {
-    font-size: 72px !important;
-    font-weight: 900 !important;
-    text-align: center !important;
+#summary-card {
+    background: linear-gradient(180deg, var(--coffee-2), var(--coffee));
+    border: 2px solid var(--rose-coffee);
+    border-radius: 24px;
+    padding: 24px;
+    box-shadow: 0 22px 70px var(--shadow);
+    max-width: 1180px;
+    margin: 22px auto 0 auto;
+}
+
+.summary-shell {
+    color: var(--cream);
+}
+
+.summary-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    align-items: flex-end;
+    margin-bottom: 18px;
+}
+
+.summary-title {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 27px;
+    color: var(--cream-2);
+    margin: 0;
+}
+
+.summary-subtitle {
+    color: var(--muted-coffee);
+    font-size: 13px;
+    margin-top: 5px;
+}
+
+.summary-badge {
+    background: var(--coffee-3);
+    border: 1px solid rgba(239, 225, 213, 0.13);
+    border-radius: 999px;
+    padding: 8px 12px;
+    color: var(--cream);
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 20px;
+}
+
+.summary-insight {
+    background: var(--coffee-3);
+    border: 1px solid rgba(239, 225, 213, 0.12);
+    border-radius: 18px;
+    padding: 18px;
+}
+
+.insight-big {
+    color: var(--cream-2);
+    font-size: 20px;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+
+.insight-line {
+    color: var(--muted-coffee);
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.confidence-table {
+    background: var(--coffee-3);
+    border: 1px solid rgba(239, 225, 213, 0.12);
+    border-radius: 18px;
+    padding: 16px;
+}
+
+.conf-row {
+    display: grid;
+    grid-template-columns: 34px 1fr 58px;
+    gap: 12px;
+    align-items: center;
+    margin: 11px 0;
+}
+
+.conf-digit {
+    color: var(--cream-2);
+    font-weight: 900;
+    font-size: 15px;
+}
+
+.conf-track {
+    background: var(--coffee);
+    border-radius: 999px;
+    height: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(239, 225, 213, 0.08);
+}
+
+.conf-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--cream-2), var(--cream));
+    border-radius: 999px;
+}
+
+.conf-percent {
+    color: var(--cream);
+    text-align: right;
+    font-weight: 700;
+    font-size: 13px;
+}
+
+.conf-row.not-top .conf-digit,
+.conf-row.not-top .conf-percent {
+    color: var(--muted-coffee);
+}
+
+.conf-row.not-top .conf-fill {
+    opacity: 0.42;
 }
 
 #footer-note {
+    color: var(--rose-coffee) !important;
     text-align: center;
-    color: var(--text-soft);
-    font-size: 14px;
+    font-size: 13px;
+    margin-top: 18px;
 }
+
+@media (max-width: 900px) {
+    #hero h1 {
+        font-size: 32px;
+    }
+
+    .prediction-digit {
+        font-size: 120px;
+    }
+
+    .summary-header,
+    .summary-grid {
+        display: block;
+    }
+
+    .summary-badge {
+        display: inline-block;
+        margin-top: 12px;
+    }
+
+    .confidence-table {
+        margin-top: 16px;
+    }
+}
+"""
+
+
+EMPTY_PREDICTION_HTML = """
+<div class="prediction-card">
+    <div class="prediction-label">Predicted Digit</div>
+    <div class="prediction-digit">?</div>
+    <div class="prediction-confidence">Draw first</div>
+    <div class="prediction-subtext">The result will appear here.</div>
+</div>
+"""
+
+
+EMPTY_SUMMARY_HTML = """
+<div class="summary-shell">
+    <div class="summary-header">
+        <div>
+            <h2 class="summary-title">Confidence Summary</h2>
+            <div class="summary-subtitle">After prediction, this section will show all digit probabilities from 0 to 9.</div>
+        </div>
+        <div class="summary-badge">Waiting for drawing</div>
+    </div>
+    <div class="summary-insight">
+        <div class="insight-big">No digit predicted yet.</div>
+        <div class="insight-line">Draw one clear digit, press Predict Digit, then check both the 28x28 preview and the probability bars.</div>
+    </div>
+</div>
 """
 
 
@@ -241,8 +496,8 @@ def preprocess_digit(editor_value):
     crop_h, crop_w = digit_crop.shape
 
     scale = 20.0 / max(crop_w, crop_h)
-    new_w = int(crop_w * scale)
-    new_h = int(crop_h * scale)
+    new_w = max(1, int(crop_w * scale))
+    new_h = max(1, int(crop_h * scale))
 
     resized = cv2.resize(
         digit_crop,
@@ -274,13 +529,87 @@ def preprocess_digit(editor_value):
 
 
 # ----------------------------
+# HTML helpers for prettier output
+# ----------------------------
+def make_prediction_card(prediction, top_probability):
+    percentage = top_probability * 100
+
+    return f"""
+    <div class="prediction-card">
+        <div class="prediction-label">Predicted Digit</div>
+        <div class="prediction-digit">{prediction}</div>
+        <div class="prediction-confidence">{percentage:.1f}% confidence</div>
+        <div class="prediction-subtext">KNN decision from nearest MNIST examples</div>
+    </div>
+    """
+
+
+def make_confidence_summary(prediction, confidence_dict):
+    sorted_digits = sorted(confidence_dict.items(), key=lambda item: item[1], reverse=True)
+    top_digit, top_prob = sorted_digits[0]
+    second_digit, second_prob = sorted_digits[1]
+    third_digit, third_prob = sorted_digits[2]
+
+    gap = top_prob - second_prob
+    model_accuracy_text = "Not stored"
+    if MODEL_ACCURACY is not None:
+        model_accuracy_text = f"{MODEL_ACCURACY * 100:.2f}% test accuracy"
+
+    rows_html = ""
+
+    for digit in range(10):
+        digit_text = str(digit)
+        prob = confidence_dict.get(digit_text, 0.0)
+        percent = prob * 100
+        row_class = "conf-row" if digit_text == str(prediction) else "conf-row not-top"
+
+        rows_html += f"""
+        <div class="{row_class}">
+            <div class="conf-digit">{digit_text}</div>
+            <div class="conf-track">
+                <div class="conf-fill" style="width: {percent:.2f}%"></div>
+            </div>
+            <div class="conf-percent">{percent:.1f}%</div>
+        </div>
+        """
+
+    return f"""
+    <div class="summary-shell">
+        <div class="summary-header">
+            <div>
+                <h2 class="summary-title">Confidence Summary</h2>
+                <div class="summary-subtitle">Detailed probability breakdown across all 10 digit classes.</div>
+            </div>
+            <div class="summary-badge">{model_accuracy_text} · trained on {TRAIN_LIMIT} samples</div>
+        </div>
+
+        <div class="summary-grid">
+            <div class="summary-insight">
+                <div class="insight-big">Top prediction: {top_digit} at {top_prob * 100:.1f}%</div>
+                <div class="insight-line">
+                    Runner-up: {second_digit} at {second_prob * 100:.1f}%<br>
+                    Third candidate: {third_digit} at {third_prob * 100:.1f}%<br><br>
+                    Confidence gap between first and second: {gap * 100:.1f} percentage points.
+                    A bigger gap usually means the KNN model found a clearer nearest-neighbor match.
+                </div>
+            </div>
+
+            <div class="confidence-table">
+                {rows_html}
+            </div>
+        </div>
+    </div>
+    """
+
+
+# ----------------------------
 # Prediction function
 # ----------------------------
 def predict_digit(editor_value):
     model_input, processed_image = preprocess_digit(editor_value)
 
     if model_input is None:
-        return "Draw first", {}, None
+        return EMPTY_PREDICTION_HTML, EMPTY_SUMMARY_HTML, None
 
     prediction = int(knn.predict(model_input)[0])
 
@@ -292,14 +621,19 @@ def predict_digit(editor_value):
         for label, prob in zip(class_labels, probabilities)
     }
 
-    return str(prediction), confidence_dict, processed_image
+    top_probability = confidence_dict.get(str(prediction), 0.0)
+
+    prediction_html = make_prediction_card(prediction, top_probability)
+    summary_html = make_confidence_summary(prediction, confidence_dict)
+
+    return prediction_html, summary_html, processed_image
 
 
 # ----------------------------
 # Clear function
 # ----------------------------
 def clear_canvas():
-    return blank_canvas(), "", {}, None
+    return blank_canvas(), EMPTY_PREDICTION_HTML, EMPTY_SUMMARY_HTML
 
 
 # ----------------------------
@@ -308,15 +642,22 @@ def clear_canvas():
 with gr.Blocks(css=APP_CSS, theme=gr.themes.Soft()) as demo:
     gr.Markdown(
         """
-        # ✍️ MNIST KNN Digit Recognizer
-        Draw a digit from **0 to 9** and let KNN compare it with stored MNIST examples.
+        # MNIST KNN Digit Recognizer
+        Draw a digit from **0 to 9** to compare against stored MNIST examples.
         """,
         elem_id="hero"
     )
 
     with gr.Group(elem_id="main-card"):
-        with gr.Row():
-            with gr.Column(scale=1):
+        gr.Markdown(
+            "💡 Tip: draw one large, centered digit. The app converts it into a clean 28x28 MNIST-style square before prediction.",
+            elem_id="tip-pill"
+        )
+
+        with gr.Row(equal_height=True):
+            with gr.Column(scale=5):
+                gr.Markdown("### 1. Drawing Canvas", elem_classes="section-title")
+
                 sketchpad = gr.ImageEditor(
                     value=blank_canvas,
                     type="numpy",
@@ -338,45 +679,36 @@ with gr.Blocks(css=APP_CSS, theme=gr.themes.Soft()) as demo:
                 )
 
                 with gr.Row():
-                    predict_button = gr.Button("Predict digit", elem_id="predict-btn")
-                    clear_button = gr.Button("Clear", elem_id="clear-btn")
+                    predict_button = gr.Button("PREDICT DIGIT", elem_id="predict-btn")
+                    clear_button = gr.Button("CLEAR", elem_id="clear-btn")
 
-            with gr.Column(scale=1):
-                digit_output = gr.Textbox(
-                    label="Predicted digit",
-                    interactive=False,
-                    elem_id="digit-output"
+            with gr.Column(scale=4, elem_id="predict-panel"):
+                gr.Markdown("### 2. Prediction", elem_classes="section-title")
+
+                prediction_output = gr.HTML(
+                    value=EMPTY_PREDICTION_HTML
                 )
 
-                confidence_output = gr.Label(
-                    label="Confidence scores"
-                )
-
-                processed_preview = gr.Image(
-                    label="What the model actually sees: centered 28x28 MNIST image",
-                    image_mode="L"
-                )
+    with gr.Group(elem_id="summary-card"):
+        confidence_summary = gr.HTML(
+            value=EMPTY_SUMMARY_HTML
+        )
 
     gr.Markdown(
-        """
-        Check the preview. It should look like a clean white digit centered on a black square.
-        If the preview looks cursed, the prediction will also be cursed.
-        """,
+        "Check the 28x28 preview first. If that tiny square looks clean, your KNN prediction has a much better chance of behaving.",
         elem_id="footer-note"
     )
 
     predict_button.click(
-        fn=predict_digit,
-        inputs=sketchpad,
-        outputs=[digit_output, confidence_output, processed_preview]
+    fn=predict_digit,
+    inputs=sketchpad,
+    outputs=[prediction_output, confidence_summary]
     )
-
     clear_button.click(
-        fn=clear_canvas,
-        inputs=None,
-        outputs=[sketchpad, digit_output, confidence_output, processed_preview]
+    fn=clear_canvas,
+    inputs=None,
+    outputs=[sketchpad, prediction_output, confidence_summary]
     )
-
 
 if __name__ == "__main__":
-    demo.launch()
+    demo.launch(share=True)
